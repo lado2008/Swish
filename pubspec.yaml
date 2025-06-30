@@ -1,0 +1,39 @@
+name: swish_app
+description: "This is Swish Flutter Prpject"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.8.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+  google_maps_flutter: ^2.12.3
+  geolocator: ^11.0.0
+  permission_handler: ^11.3.1
+  camera: ^0.10.5+5
+  path_provider: ^2.1.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^5.0.0
+
+
+flutter:
+  assets:
+    - assets/images/logo.png
+    - assets/images/google.png
+    - assets/images/pin.png
+
+  fonts:
+    - family: BPGNinoMtavruliBold
+      fonts:
+        - asset: assets/fonts/bpg_nino_mtavruli_bold.ttf
+
+  uses-material-design: true

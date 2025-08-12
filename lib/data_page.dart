@@ -171,10 +171,10 @@ class _DataPageState extends State<DataPage> {
                       bottom: 15,
                       child: GestureDetector(
                         onTap: () {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => const CameraPage())
-                          );
+                          // Navigator.push(
+                          //     context,
+                          //     MaterialPageRoute(builder: (context) => const CameraPage())
+                          // );
                         },
                         child: Container(
                           padding: const EdgeInsets.all(12),

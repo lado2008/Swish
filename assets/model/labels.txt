@@ -1,0 +1,21 @@
+0 Angora Loach
+1 Arapaima
+2 Black Sea Sprat
+3 Black Sea Trout
+4 Blind Cave Fish
+5 Catfish
+6 Caucasian Scraper
+7 Cichlids Of Lake Malawi
+8 Colchic Nase
+9 Europien Eel
+10 Gilt-Head Bream
+11 Goby
+12 Grass Carp
+13 Hourse Mackerel
+14 Kura Barbel
+15 Mullet
+16 Neon Tetra
+17 Perch
+18 Persian Sturgeon
+19 Red Mullet
+20 Silver Carp

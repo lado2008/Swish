@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:swish_app/camera.dart';
+import 'package:swish_app/classify_page.dart';
 import 'data_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -213,7 +214,7 @@ class _HomePageState extends State<HomePage> {
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => const CameraPage())
+                            MaterialPageRoute(builder: (context) => const ClassifyPage())
                           );
                         },
                         child: Container(

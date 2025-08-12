@@ -1,0 +1,107 @@
+[
+  {
+    "english": "Arapaima",
+    "georgian": "არაპაიმა",
+    "in_red_book": false
+  },
+  {
+    "english": "Black Sea Sprat",
+    "georgian": "შავი ზღვის ქაშაყი",
+    "in_red_book": false
+  },
+  {
+    "english": "Black Sea Trout",
+    "georgian": "შავი ზღვის კალმახი",
+    "in_red_book": true
+  },
+  {
+    "english": "Blind Cave Fish",
+    "georgian": "ბრმა მღვიმის თევზი",
+    "in_red_book": true
+  },
+  {
+    "english": "Catfish",
+    "georgian": "ლოქო",
+    "in_red_book": false
+  },
+  {
+    "english": "Caucasian Scraper",
+    "georgian": "კავკასიური ხრამული",
+    "in_red_book": true
+  },
+  {
+    "english": "Cichlids Of Lake Malawi",
+    "georgian": "მალავის ტბის ციხლიდები",
+    "in_red_book": true
+  },
+  {
+    "english": "Colchic Nase",
+    "georgian": "კოლხური ტობი",
+    "in_red_book": true
+  },
+  {
+    "english": "European Eel",
+    "georgian": "ევროპული გველთევზა",
+    "in_red_book": true
+  },
+  {
+    "english": "Gilt-Head Bream",
+    "georgian": "დორადო",
+    "in_red_book": false
+  },
+  {
+    "english": "Goby",
+    "georgian": "ღორჯო",
+    "in_red_book": true
+  },
+  {
+    "english": "Grass Carp",
+    "georgian": "ბალახის კობრი / თეთრი ამური",
+    "in_red_book": false
+  },
+  {
+    "english": "Hourse Mackerel",
+    "georgian": "სკუმბრია",
+    "in_red_book": false
+  },
+  {
+    "english": "Kura Barbel",
+    "georgian": "მტკვრის წვერა",
+    "in_red_book": true
+  },
+  {
+    "english": "Mullet",
+    "georgian": "კეფალი",
+    "in_red_book": false
+  },
+  {
+    "english": "Neon Tetra",
+    "georgian": "ნეონ ტეტრა",
+    "in_red_book": false
+  },
+  {
+    "english": "Perch",
+    "georgian": "ქორჭილა",
+    "in_red_book": false
+  },
+  {
+    "english": "Persian Sturgeon",
+    "georgian": "ზუთხი",
+    "in_red_book": true
+  },
+  {
+    "english": "Red Mullet",
+    "georgian": "ბარაბული",
+    "in_red_book": false
+  },
+  {
+    "english": "Silver Carp",
+    "georgian": "ვერცხლის კობრი / თეთრი სქელშუბლა",
+    "in_red_book": false
+  },
+  {
+    "english": "Angora Loach",
+    "georgian": "ანგორის ხლაკუნა",
+    "in_red_book": true
+  }
+]

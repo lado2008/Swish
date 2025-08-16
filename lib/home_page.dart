@@ -1,9 +1,14 @@
+// home_page.dart
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:swish_app/camera.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:swish_app/classify_page.dart';
-import 'data_page.dart';
+import 'package:swish_app/data_page.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
+import 'package:swish_app/welcome_page.dart'; // Import the Welcome Page
+import 'package:swish_app/profile_page.dart';
+
+import 'classify_page_google_API.dart'; // Import the Profile Page
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -24,7 +29,11 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _getUserLocation() async {
     LocationPermission permission = await Geolocator.requestPermission();
-    if (permission == LocationPermission.denied) return;
+    if (permission == LocationPermission.denied) {
+      // Handle the case where location permission is denied
+      // You might want to show a message to the user
+      return;
+    }
 
     final position = await Geolocator.getCurrentPosition(
       desiredAccuracy: LocationAccuracy.high,
@@ -109,9 +118,32 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // Logout Function
+  Future<void> _logout() async {
+    await FirebaseAuth.instance.signOut();
+    // Navigate to the welcome page and remove all previous routes
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => const FirstPage()),
+          (Route<dynamic> route) => false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'მთავარი გვერდი',
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: const Color(0xFF9675FF),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.white),
+            onPressed: _logout,
+          ),
+        ],
+      ),
       body: _currentPosition == null
           ? const Center(child: CircularProgressIndicator())
           : Stack(
@@ -193,7 +225,9 @@ class _HomePageState extends State<HomePage> {
                           IconButton(
                             icon: const Icon(Icons.home_outlined,
                                 color: Colors.white),
-                            onPressed: () {},
+                            onPressed: () {
+                              // We are already on the HomePage
+                            },
                           ),
                           const SizedBox(width: 70),
                           IconButton(
@@ -201,7 +235,7 @@ class _HomePageState extends State<HomePage> {
                                 color: Colors.white),
                             onPressed: () {
                               Navigator.push(context,
-                                  MaterialPageRoute(builder: (context) => const HomePage()),
+                                MaterialPageRoute(builder: (context) => const ProfilePage()),
                               );
                             },
                           ),
@@ -214,7 +248,7 @@ class _HomePageState extends State<HomePage> {
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => const ClassifyPage())
+                            MaterialPageRoute(builder: (context) => const ClassifyPage()),
                           );
                         },
                         child: Container(
@@ -223,7 +257,7 @@ class _HomePageState extends State<HomePage> {
                             color: Colors.transparent,
                             shape: BoxShape.circle,
                             border: Border.all(
-                                color: Color(0xFFFFFFFF), width: 3),
+                                color: const Color(0xFFFFFFFF), width: 3),
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black.withOpacity(0.2),

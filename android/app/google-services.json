@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "796569324011",
+    "project_id": "millenium-swish-project",
+    "storage_bucket": "millenium-swish-project.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:796569324011:android:370e271f5f4eb98b9071ae",
+        "android_client_info": {
+          "package_name": "com.example.swish_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA1pATrf51GAEQTAoh5lVOS7HAHNrbpJEk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

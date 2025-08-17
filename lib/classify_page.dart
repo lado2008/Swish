@@ -1,5 +1,3 @@
-// classify_page.dart
-
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'dart:convert';
@@ -8,6 +6,11 @@ import 'package:image_picker/image_picker.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:image/image.dart' as img;
 import 'dart:math';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:geolocator/geolocator.dart';
+
 
 class ClassifyPage extends StatefulWidget {
   const ClassifyPage({super.key});
@@ -25,6 +28,9 @@ class _ClassifyPageState extends State<ClassifyPage> {
   List<String>? _labels;
   List<Map<String, dynamic>>? _fishInfo;
 
+  String? _currentFishName;
+  double? _currentConfidence;
+
   @override
   void initState() {
     super.initState();
@@ -38,10 +44,8 @@ class _ClassifyPageState extends State<ClassifyPage> {
   }
 
   /// Loads the TFLite model and labels from assets.
-  /// Loads the TFLite model and labels from assets.
   Future<void> _loadModel() async {
     try {
-      // Using the unquantized model as requested.
       _interpreter = await Interpreter.fromAsset('assets/model/model_unquant.tflite');
 
       final labelsData = await rootBundle.loadString('assets/model/labels.txt');
@@ -114,19 +118,18 @@ class _ClassifyPageState extends State<ClassifyPage> {
       double maxScore = outputList.reduce(max);
       int predictedIndex = outputList.indexOf(maxScore);
 
-      // Improvement: Safer way to parse labels
       String rawLabel = _labels![predictedIndex];
-      String prediction = rawLabel.replaceAll(RegExp(r'^\d+\s'), ''); // Removes leading numbers and a space
+      String prediction = rawLabel.replaceAll(RegExp(r'^\d+\s'), '');
 
       print("💡 Result: $prediction with confidence of ${maxScore.toStringAsFixed(3)}");
 
       setState(() {
         _isProcessing = false;
+        _currentFishName = prediction;
+        _currentConfidence = maxScore;
       });
 
-      // Improvement: Pass the confidence score to the popup
       _showFishPopup(prediction, maxScore);
-
     } catch (e) {
       print("❌❌❌ An error occurred: $e");
       setState(() {
@@ -135,21 +138,126 @@ class _ClassifyPageState extends State<ClassifyPage> {
     }
   }
 
-  /// Displays a popup with the identified fish name and confidence score.
-  void _showFishPopup(String englishFishName, double confidence) {
-    String georgianFishName = englishFishName; // Default to English if not found
-    bool isInRedBook = false;
+  /// Gets the current user's location.
+  Future<Position?> _getCurrentLocation() async {
+    try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          print('❌ Location permissions are denied');
+          return null;
+        }
+      }
+      if (permission == LocationPermission.deniedForever) {
+        print('❌ Location permissions are permanently denied');
+        return null;
+      }
+      return await Geolocator.getCurrentPosition();
+    } catch (e) {
+      print('❌ Error getting location: $e');
+      return null;
+    }
+  }
 
-    if (_fishInfo != null) {
-      final fishData = _fishInfo!.firstWhere(
-            (fish) => fish['english'] == englishFishName,
-        orElse: () => <String, dynamic>{}, // Return an empty map if not found
+  /// Uploads the image to Firebase Storage and saves data to Firestore.
+  Future<void> _saveFishDataToFirebase() async {
+    if (_image == null || _currentFishName == null) {
+      print('❌ No image or fish name to save.');
+      return;
+    }
+
+    try {
+      setState(() {
+        _isProcessing = true;
+      });
+
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        print('❌ User not logged in.');
+        return;
+      }
+
+      final fileName = 'fish_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final storageRef = FirebaseStorage.instance.ref()
+          .child('fish_uploads/${user.uid}/$fileName');
+
+      print("⬆️ Uploading image to Firebase Storage...");
+      final uploadTask = storageRef.putFile(_image!);
+      final snapshot = await uploadTask.whenComplete(() {});
+      final downloadUrl = await snapshot.ref.getDownloadURL();
+      print("✅ Image uploaded. URL: $downloadUrl");
+
+      Position? location = await _getCurrentLocation();
+      String locationString = location != null
+          ? 'Lat: ${location.latitude.toStringAsFixed(4)}, Long: ${location.longitude.toStringAsFixed(4)}'
+          : 'Unknown';
+
+      print("📝 Saving data to Firestore...");
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('fishes')
+          .add({
+        'englishName': _currentFishName,
+        'imageUrl': downloadUrl,
+        'timestamp': FieldValue.serverTimestamp(),
+        'confidence': _currentConfidence,
+        'location': locationString,
+      });
+
+      print("✅ Data saved to Firestore successfully.");
+
+      // Add this line to show a SnackBar when the process is complete
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('ფოტო წარმატებით დაემატა გალერეაში!'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 3),
+        ),
       );
 
-      if (fishData.isNotEmpty) {
-        georgianFishName = fishData['georgian'] ?? englishFishName;
-        isInRedBook = fishData['in_red_book'] ?? false;
+    } catch (e) {
+      print("❌ Error saving data to Firebase: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('შეცდომა: მონაცემების შენახვა ვერ მოხერხდა.'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 3),
+        ),
+      );
+    } finally {
+      setState(() {
+        _isProcessing = false;
+        _image = null;
+      });
+    }
+  }
+
+  /// Displays a popup with the identified fish name and confidence score.
+  void _showFishPopup(String englishFishName, double confidence) {
+    String georgianFishName = englishFishName;
+    bool isInRedBook = false;
+    String displayMessage = '';
+
+    const double confidenceThreshold = 0.80;
+    bool isUnsuccessful = confidence < confidenceThreshold;
+
+    if (isUnsuccessful) {
+      displayMessage = 'თევზის ამოცნობა ვერ მოხერხდა';
+    } else {
+      if (_fishInfo != null) {
+        final fishData = _fishInfo!.firstWhere(
+              (fish) => fish['english'] == englishFishName,
+          orElse: () => <String, dynamic>{},
+        );
+
+        if (fishData.isNotEmpty) {
+          georgianFishName = fishData['georgian'] ?? englishFishName;
+          isInRedBook = fishData['in_red_book'] ?? false;
+        }
       }
+      displayMessage = georgianFishName;
     }
 
     showModalBottomSheet(
@@ -198,26 +306,27 @@ class _ClassifyPageState extends State<ClassifyPage> {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    georgianFishName, // Display Georgian name
+                    displayMessage,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFFAC81FF),
+                      color: isUnsuccessful ? Colors.redAccent : const Color(0xFFAC81FF),
                       fontFamily: 'BPGNinoMtavruliBold',
                     ),
                   ),
                   const SizedBox(height: 15),
-                  Text(
-                    'Confidence: ${(confidence * 100).toStringAsFixed(1)}%',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey,
+                  if (!isUnsuccessful)
+                    Text(
+                      'Confidence: ${(confidence * 100).toStringAsFixed(1)}%',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey,
+                      ),
                     ),
-                  ),
                   const SizedBox(height: 25),
-                  if (isInRedBook)
+                  if (isInRedBook && !isUnsuccessful)
                     Container(
                       decoration: BoxDecoration(
                         color: Colors.redAccent,
@@ -236,8 +345,9 @@ class _ClassifyPageState extends State<ClassifyPage> {
                     ),
                   const SizedBox(height: 25),
                   OutlinedButton(
-                    onPressed: () {
-                      print('Save pressed');
+                    onPressed: () async {
+                      Navigator.pop(context); // Close the popup
+                      await _saveFishDataToFirebase();
                     },
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: Color(0xFFAC81FF)),
@@ -268,6 +378,7 @@ class _ClassifyPageState extends State<ClassifyPage> {
       });
     });
   }
+
 
   @override
   Widget build(BuildContext context) {

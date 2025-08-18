@@ -54,6 +54,14 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  Future<void> _login(BuildContext context) async {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => const FirstPage()),
+          (Route<dynamic> route) => false,
+    );
+  }
+
   Future<void> _deleteFish(BuildContext context, String docId, String imageUrl) async {
     try {
       final bool confirmDelete = await showDialog(
@@ -120,10 +128,104 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
+
+    // Guest Mode UI
     if (user == null) {
-      return const Center(child: Text('User not logged in.'));
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            'პროფილი',
+            style: TextStyle(
+              color: Color(0xFF3F266F),
+              fontFamily: 'BPGNinoMtavruliBold',
+            ),
+          ),
+          backgroundColor: const Color(0xFFE5DDFE),
+          elevation: 0,
+          centerTitle: true,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Color(0xFF3F266F)),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
+        body: Container(
+          color: Colors.white,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 150,
+                    height: 150,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE5DDFE),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: const Color(0xFFAC81FF), width: 4),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.person_off_outlined,
+                      size: 80,
+                      color: Color(0xFF3F266F),
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  const Text(
+                    'თქვენ არ ხართ შესული',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF3F266F),
+                      fontFamily: 'BPGNinoMtavruliBold',
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'გთხოვთ, შეხვიდეთ ან დარეგისტრირდეთ პროფილის სანახავად.',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 40),
+                  ElevatedButton(
+                    onPressed: () => _login(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFAC81FF),
+                      padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      elevation: 5,
+                    ),
+                    child: const Text(
+                      'შესვლა',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.white,
+                        fontFamily: 'BPGNinoMtavruliBold',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
     }
 
+    // User is logged in UI
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -184,7 +286,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   decoration: BoxDecoration(
                     color: const Color(0xFFE5DDFE),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFFAC81FF).withOpacity(0.5), width: 2), // ბორდერის სისქე
+                    border: Border.all(color: const Color(0xFFAC81FF).withOpacity(0.5), width: 2),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.grey.withOpacity(0.2),
@@ -265,12 +367,12 @@ class _ProfilePageState extends State<ProfilePage> {
                       final fishDocs = fishSnapshot.data!.docs;
 
                       return GridView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5), // padding-ის გაზრდა
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
                         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
-                          crossAxisSpacing: 20, // ინტერვალის გაზრდა
-                          mainAxisSpacing: 20, // ინტერვალის გაზრდა
-                          childAspectRatio: 0.7, // ზომის გაზრდა (0.8-დან 0.7-მდე)
+                          crossAxisSpacing: 20,
+                          mainAxisSpacing: 20,
+                          childAspectRatio: 0.7,
                         ),
                         itemCount: fishDocs.length,
                         itemBuilder: (context, index) {
@@ -285,8 +387,8 @@ class _ProfilePageState extends State<ProfilePage> {
                             children: [
                               Container(
                                 decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(25), // კუთხეების მომრგვალება
-                                  border: Border.all(color: const Color(0xFFAC81FF), width: 2), // ლამაზი ბორდერი
+                                  borderRadius: BorderRadius.circular(25),
+                                  border: Border.all(color: const Color(0xFFAC81FF), width: 2),
                                   boxShadow: [
                                     BoxShadow(
                                       color: Colors.black.withOpacity(0.1),
@@ -297,7 +399,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                   ],
                                 ),
                                 child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(22), // შიდა სურათის კუთხეები
+                                  borderRadius: BorderRadius.circular(22),
                                   child: Column(
                                     children: [
                                       Expanded(

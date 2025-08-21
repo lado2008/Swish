@@ -10,7 +10,6 @@ import 'package:swish_app/profile_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:geocoding/geocoding.dart';
-import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -29,6 +28,9 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   late final AnimationController _cameraButtonController;
   late final Animation<double> _cameraButtonScaleAnimation;
 
+  // Add a listener to handle keyboard visibility
+  late bool _isKeyboardVisible;
+
   @override
   void initState() {
     super.initState();
@@ -43,11 +45,22 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
         curve: Curves.easeOut,
       ),
     );
+
+    // Add listener to the FocusNode to detect keyboard visibility
+    _isKeyboardVisible = false;
+    _searchFocusNode.addListener(_onFocusChange);
+  }
+
+  void _onFocusChange() {
+    setState(() {
+      _isKeyboardVisible = _searchFocusNode.hasFocus;
+    });
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _searchFocusNode.removeListener(_onFocusChange); // Remove the listener
     _searchFocusNode.dispose(); // Dispose the FocusNode
     _cameraButtonController.dispose();
     super.dispose();
@@ -350,150 +363,147 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       ),
       body: _currentPosition == null
           ? const Center(child: CircularProgressIndicator())
-          : KeyboardVisibilityBuilder(
-        builder: (context, isKeyboardVisible) {
-          return Stack(
-            children: [
-              Positioned.fill(
-                child: GoogleMap(
-                  initialCameraPosition: CameraPosition(
-                    target: _currentPosition!,
-                    zoom: 14,
-                  ),
-                  myLocationEnabled: true,
-                  myLocationButtonEnabled: false,
-                  zoomControlsEnabled: false,
-                  onMapCreated: (controller) => mapController = controller,
-                  onTap: (_) => _showLocationPopup(),
-                  markers: _markers,
-                ),
+          : Stack(
+        children: [
+          Positioned.fill(
+            child: GoogleMap(
+              initialCameraPosition: CameraPosition(
+                target: _currentPosition!,
+                zoom: 14,
               ),
-              Positioned(
-                top: 20,
-                left: 20,
-                right: 20,
+              myLocationEnabled: true,
+              myLocationButtonEnabled: false,
+              zoomControlsEnabled: false,
+              onMapCreated: (controller) => mapController = controller,
+              onTap: (_) => _showLocationPopup(),
+              markers: _markers,
+            ),
+          ),
+          Positioned(
+            top: 20,
+            left: 20,
+            right: 20,
+            child: Container(
+              height: 50,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: TextField(
+                        controller: _searchController,
+                        focusNode: _searchFocusNode, // Connect the FocusNode
+                        decoration: const InputDecoration(
+                          hintText: 'მოძებნე ლოკაცია',
+                          hintStyle: TextStyle(color: Colors.grey),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                        onSubmitted: (value) => _searchLocation(),
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.search, color: Color(0xFFAC81FF)),
+                    onPressed: _searchLocation,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          AnimatedPositioned(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+            bottom: _isKeyboardVisible ? -100 : 20,
+            left: 15,
+            right: 15,
+            child: AnimatedOpacity(
+              opacity: _isKeyboardVisible ? 0.0 : 1.0,
+              duration: const Duration(milliseconds: 300),
+              child: SafeArea(
+                top: false,
                 child: Container(
-                  height: 50,
+                  height: 80,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: const Color(0xFF363636),
                     borderRadius: BorderRadius.circular(30),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 10,
+                        color: Colors.black.withOpacity(0.3),
+                        blurRadius: 20,
                         offset: const Offset(0, 5),
                       ),
                     ],
                   ),
                   child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: TextField(
-                            controller: _searchController,
-                            focusNode: _searchFocusNode, // Connect the FocusNode
-                            decoration: const InputDecoration(
-                              hintText: 'მოძებნე ლოკაცია',
-                              hintStyle: TextStyle(color: Colors.grey),
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.zero,
+                      IconButton(
+                        icon: const Icon(Icons.home_outlined, color: Colors.white, size: 30),
+                        onPressed: () {},
+                      ),
+                      ScaleTransition(
+                        scale: _cameraButtonScaleAnimation,
+                        child: GestureDetector(
+                          onTapDown: (_) => _cameraButtonController.forward(),
+                          onTapUp: (_) => _cameraButtonController.reverse(),
+                          onTapCancel: () => _cameraButtonController.reverse(),
+                          onTap: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const ClassifyPage()),
+                            );
+                            _loadFishLocations();
+                          },
+                          child: Container(
+                            width: 60,
+                            height: 60,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 3),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.3),
+                                  blurRadius: 15,
+                                  offset: const Offset(0, 5),
+                                ),
+                              ],
                             ),
-                            onSubmitted: (value) => _searchLocation(),
+                            child: const Icon(
+                              Icons.camera_alt,
+                              color: Color(0xFFAC81FF),
+                              size: 35,
+                            ),
                           ),
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.search, color: Color(0xFFAC81FF)),
-                        onPressed: _searchLocation,
+                        icon: const Icon(Icons.person_outline, color: Colors.white, size: 30),
+                        onPressed: () {
+                          Navigator.push(context,
+                            MaterialPageRoute(builder: (context) => const ProfilePage()),
+                          );
+                        },
                       ),
                     ],
                   ),
                 ),
               ),
-
-              Positioned(
-                bottom: isKeyboardVisible ? -100 : 20,
-                left: 15,
-                right: 15,
-                child: AnimatedOpacity(
-                  opacity: isKeyboardVisible ? 0.0 : 1.0,
-                  duration: const Duration(milliseconds: 300),
-                  child: SafeArea(
-                    top: false,
-                    child: Container(
-                      height: 80,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF363636),
-                        borderRadius: BorderRadius.circular(30),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.3),
-                            blurRadius: 20,
-                            offset: const Offset(0, 5),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.home_outlined, color: Colors.white, size: 30),
-                            onPressed: () {},
-                          ),
-                          ScaleTransition(
-                            scale: _cameraButtonScaleAnimation,
-                            child: GestureDetector(
-                              onTapDown: (_) => _cameraButtonController.forward(),
-                              onTapUp: (_) => _cameraButtonController.reverse(),
-                              onTapCancel: () => _cameraButtonController.reverse(),
-                              onTap: () async {
-                                await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => const ClassifyPage()),
-                                );
-                                _loadFishLocations();
-                              },
-                              child: Container(
-                                width: 60,
-                                height: 60,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(color: Colors.white, width: 3),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.3),
-                                      blurRadius: 15,
-                                      offset: const Offset(0, 5),
-                                    ),
-                                  ],
-                                ),
-                                child: const Icon(
-                                  Icons.camera_alt,
-                                  color: Color(0xFFAC81FF),
-                                  size: 35,
-                                ),
-                              ),
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.person_outline, color: Colors.white, size: 30),
-                            onPressed: () {
-                              Navigator.push(context,
-                                MaterialPageRoute(builder: (context) => const ProfilePage()),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          );
-        },
+            ),
+          ),
+        ],
       ),
     );
   }

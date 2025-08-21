@@ -240,7 +240,7 @@ class _ClassifyPageState extends State<ClassifyPage> {
     bool isInRedBook = false;
     String displayMessage = '';
 
-    const double confidenceThreshold = 0.80;
+    const double confidenceThreshold = 0.99;
     bool isUnsuccessful = confidence < confidenceThreshold;
 
     if (isUnsuccessful) {

@@ -107,7 +107,7 @@ class _ClassifyPageState extends State<ClassifyPage> {
         }
       }
 
-      int newClassCount = 21;
+      int newClassCount = 11;
       var output = List.filled(1 * newClassCount, 0.0).reshape([1, newClassCount]);
 
       print("⚙️ Running inference...");
@@ -240,7 +240,7 @@ class _ClassifyPageState extends State<ClassifyPage> {
     bool isInRedBook = false;
     String displayMessage = '';
 
-    const double confidenceThreshold = 0.99;
+    const double confidenceThreshold = 0.95;
     bool isUnsuccessful = confidence < confidenceThreshold;
 
     if (isUnsuccessful) {
